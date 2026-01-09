@@ -15,6 +15,6 @@ headers = {
 
 url = 'https://openrouter.ai/api/v1/chat/completions'
 
-prmp_base = f"""
-
+prompt_base = f"""
+    You are a research assistant whose work is to understand the papers and make assumtions out of them.
 """
