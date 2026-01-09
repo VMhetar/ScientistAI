@@ -20,6 +20,7 @@ You are a research assistant. Help the researcher with multiple tasks and each t
 async def llm_call(prompt:str):
     prompt =prompt_base
     data = {
+        'model':'gpt-3.5-turbo',
         'messages':[
             {
                 'role':'user',
