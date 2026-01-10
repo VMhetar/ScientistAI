@@ -1,26 +1,50 @@
-import os
-import httpx
-import asyncio
 from typing import Dict, List
 from llm_base import llm_call
-from assumption_agent import assumption_agent
 from mcp.server.fastmcp import FastMCP
 
-mcp = FastMCP('Hypothesis-Agent')
+mcp = FastMCP("Hypothesis-Agent")
 
-prompt_base = f"""
-You are an helpful research assistant. 
-Help the researchers by generating hypotheses out of the assumptions which are creted.
-Hypothesis should be structured ONLY and should be in the format:
+prompt_base = """
+You are a scientific research assistant.
+
+Your task:
+1. Read the extracted assumptions.
+2. Generate testable hypotheses derived from these assumptions.
+3. Classify each hypothesis as explicit or implicit.
+4. Explain why each item qualifies as a hypothesis (i.e., can be falsified).
+
+STRICT OUTPUT FORMAT (valid JSON only, no markdown, no commentary):
+
 {
-    'Experiment': str,
-    'Hypothesis': List[str]
-    'Reasons': List[str]
+  "experiment_id": 1,
+  "hypotheses": [
+    {
+      "type": "explicit | implicit",
+      "statement": "<hypothesis text>",
+      "reason": "<why this is a hypothesis>"
+    }
+  ]
 }
-Other than this, donot write anything else.
+
+Rules:
+- Hypotheses must be logically derived from assumptions.
+- Do NOT restate assumptions verbatim.
+- Do NOT summarize the paper.
+- Do NOT invent experiments.
+- Do NOT output anything outside the JSON object.
 """
 
-async def hypothesis_agent(prompt:str):
-    prompt = prompt_base
+async def hypothesis_agent(
+    assumptions_json: str,
+    experiment_id: int = 1
+):
+    prompt = f"""
+{prompt_base}
+
+EXTRACTED ASSUMPTIONS:
+\"\"\"
+{assumptions_json}
+\"\"\"
+"""
     response = await llm_call(prompt)
     return response
