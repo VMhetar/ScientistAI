@@ -106,6 +106,3 @@ Current Status
 🚧 Early-stage development
 Further updates will be added as the system evolves.
 
-## License
-This project is licensed under the MIT License.  
-You are free to use, modify, and build upon this work with attribution.
