@@ -20,7 +20,7 @@ prompt_base = f"""
     Response should be in the form of a list of assumptions like:
     {
         'Experiment': int,
-        'Assumption': List[str]
+        'AssumptionS': List[str]
     }
 """
 
