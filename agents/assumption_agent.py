@@ -1,32 +1,45 @@
 import os
-import httpx
-import asyncio
 from llm_base import llm_call
 from mcp.server.fastmcp import FastMCP
-from typing import Dict, List
-mcp = FastMCP('Assumption-Agent')
+from typing import List, Dict
 
-api_key = os.getenv('OPENROUTER_API_KEY')
+mcp = FastMCP("Assumption-Agent")
 
-headers = {
-    'Auhorization': f'Bearer {api_key}',
-    'Content-type': 'application/json'
+prompt_base = """
+You are a scientific research assistant.
+
+Your task:
+1. Read the provided research paper text.
+2. Extract BOTH explicit and implicit assumptions.
+3. Explain briefly why each item is an assumption.
+
+STRICT OUTPUT FORMAT (valid JSON only, no markdown, no commentary):
+
+{
+  "experiment_id": 1,
+  "assumptions": [
+    {
+      "type": "explicit | implicit",
+      "statement": "<assumption text>",
+      "reason": "<why this is an assumption>"
+    }
+  ]
 }
 
-url = 'https://openrouter.ai/api/v1/chat/completions'
-
-prompt_base = f"""
-    You are a research assistant whose work is to understand the papers and make assumtions out of them.
-    Response should be in the form of a list of assumptions in this format ONLY :
-    {
-        'Experiment': int,
-        'Assumptions': List[str]
-        'Reasons': List[str]
-    }
-Do NOT write anything else.
+Rules:
+- Do NOT summarize the paper.
+- Do NOT invent experiments not mentioned.
+- Do NOT output anything outside the JSON object.
 """
 
-async def assumption_agent(prompt:str):
-    prompt = prompt_base
+async def assumption_agent(paper_text: str, experiment_id: int = 1):
+    prompt = f"""
+{prompt_base}
+
+PAPER TEXT:
+\"\"\"
+{paper_text}
+\"\"\"
+"""
     response = await llm_call(prompt)
     return response
