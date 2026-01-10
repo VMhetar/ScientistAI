@@ -83,6 +83,24 @@ Hypothesis pressure-testing
 This is not a literature assistant.
 It is a thinking assistant.
 
+scientist_ai/
+├── agents/
+│   ├── llm_base.py
+│   ├── assumption_agent.py
+│   ├── hypothesis_agent.py
+│   └── experiment_agent.py
+│
+├── orchestrator/
+│   ├── pipeline.py
+│   └── state.py
+│
+├── backend/
+│   ├── main.py
+│   ├── routes.py
+│   └── schemas.py
+│
+└── frontend/
+
 Current Status
 
 🚧 Early-stage development
