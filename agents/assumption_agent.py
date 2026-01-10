@@ -3,7 +3,7 @@ import httpx
 import asyncio
 from llm_base import llm_call
 from mcp.server.fastmcp import FastMCP
-
+from typing import Dict, List
 mcp = FastMCP('Assumption-Agent')
 
 api_key = os.getenv('OPENROUTER_API_KEY')
@@ -17,6 +17,11 @@ url = 'https://openrouter.ai/api/v1/chat/completions'
 
 prompt_base = f"""
     You are a research assistant whose work is to understand the papers and make assumtions out of them.
+    Response should be in the form of a list of assumptions like:
+    {
+        'Experiment': int,
+        'Assumption': List[str]
+    }
 """
 
 async def assumption_agent(prompt:str):
