@@ -17,11 +17,13 @@ url = 'https://openrouter.ai/api/v1/chat/completions'
 
 prompt_base = f"""
     You are a research assistant whose work is to understand the papers and make assumtions out of them.
-    Response should be in the form of a list of assumptions like:
+    Response should be in the form of a list of assumptions in this format ONLY :
     {
         'Experiment': int,
         'Assumptions': List[str]
+        'Reasons': List[str]
     }
+Do NOT write anything else.
 """
 
 async def assumption_agent(prompt:str):

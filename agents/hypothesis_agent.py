@@ -11,10 +11,16 @@ mcp = FastMCP('Hypothesis-Agent')
 prompt_base = f"""
 You are an helpful research assistant. 
 Help the researchers by generating hypotheses out of the assumptions which are creted.
-Hypothesis should be strcutired ONLY and should be in the format:
+Hypothesis should be structured ONLY and should be in the format:
 {
     'Experiment': str,
     'Hypothesis': List[str]
     'Reasons': List[str]
 }
+Other than this, donot write anything else.
 """
+
+async def hypothesis_agent(prompt:str):
+    prompt = prompt_base
+    response = await llm_call(prompt)
+    return response
