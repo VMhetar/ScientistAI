@@ -18,7 +18,6 @@ class ResearchOrchestrator:
 
         experiment_id = 1
 
-        # ---- Step 1: Assumption Extraction ----
         assumptions_raw = await assumption_agent(
             paper_text=paper_text,
             experiment_id=experiment_id
@@ -29,7 +28,6 @@ class ResearchOrchestrator:
             stage="assumption_agent"
         )
 
-        # ---- Step 2: Hypothesis Generation ----
         hypotheses_raw = await hypothesis_agent(
             assumptions_json=json.dumps(assumptions),
             experiment_id=experiment_id
@@ -40,7 +38,6 @@ class ResearchOrchestrator:
             stage="hypothesis_agent"
         )
 
-        # ---- Step 3: Experiment Design ----
         experiments_raw = await experiment_agent(
             hypotheses_json=json.dumps(hypotheses),
             experiment_id=experiment_id
