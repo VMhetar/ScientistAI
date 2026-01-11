@@ -6,47 +6,40 @@ from agent.hypothesis_agent import hypothesis_agent
 from agent.experiment_agent import experiment_agent
 
 
+import json
+import time
+import uuid
+import logging
+
+logging.basicConfig(level=logging.INFO)
+
+
 class ResearchOrchestrator:
-    def __init__(self):
-        pass
-
-    async def run(self, paper_text: str) -> Dict:
-        """
-        Runs the full research reasoning pipeline:
-        Paper -> Assumptions -> Hypotheses -> Experiments
-        """
-
+    async def run(self, paper_text: str):
+        request_id = str(uuid.uuid4())
         experiment_id = 1
 
-        assumptions_raw = await assumption_agent(
-            paper_text=paper_text,
-            experiment_id=experiment_id
+        logging.info(f"[{request_id}] Pipeline started")
+
+        assumptions = await self._run_stage(
+            name="assumption_agent",
+            func=lambda: assumption_agent(paper_text, experiment_id),
+            request_id=request_id
         )
 
-        assumptions = self._safe_json_parse(
-            assumptions_raw,
-            stage="assumption_agent"
+        hypotheses = await self._run_stage(
+            name="hypothesis_agent",
+            func=lambda: hypothesis_agent(json.dumps(assumptions), experiment_id),
+            request_id=request_id
         )
 
-        hypotheses_raw = await hypothesis_agent(
-            assumptions_json=json.dumps(assumptions),
-            experiment_id=experiment_id
+        experiments = await self._run_stage(
+            name="experiment_agent",
+            func=lambda: experiment_agent(json.dumps(hypotheses), experiment_id),
+            request_id=request_id
         )
 
-        hypotheses = self._safe_json_parse(
-            hypotheses_raw,
-            stage="hypothesis_agent"
-        )
-
-        experiments_raw = await experiment_agent(
-            hypotheses_json=json.dumps(hypotheses),
-            experiment_id=experiment_id
-        )
-
-        experiments = self._safe_json_parse(
-            experiments_raw,
-            stage="experiment_agent"
-        )
+        logging.info(f"[{request_id}] Pipeline completed")
 
         return {
             "experiment_id": experiment_id,
@@ -55,13 +48,23 @@ class ResearchOrchestrator:
             "experiments": experiments
         }
 
-    def _safe_json_parse(self, raw_output: str, stage: str) -> Dict:
-        """
-        Strict JSON parser with failure visibility.
-        """
+    async def _run_stage(self, name, func, request_id):
+        logging.info(f"[{request_id}] {name} started")
+        start = time.time()
+
+        raw = await func()
+
         try:
-            return json.loads(raw_output)
-        except json.JSONDecodeError as e:
-            raise RuntimeError(
-                f"[{stage}] Invalid JSON output:\n{raw_output}"
-            ) from e
+            parsed = json.loads(raw)
+        except json.JSONDecodeError:
+            logging.error(
+                f"[{request_id}] {name} returned invalid JSON:\n{raw}"
+            )
+            raise
+
+        duration = time.time() - start
+        logging.info(
+            f"[{request_id}] {name} completed in {duration:.2f}s"
+        )
+
+        return parsed
