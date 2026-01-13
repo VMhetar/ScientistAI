@@ -3,10 +3,9 @@ import hashlib
 import hmac
 import base64
 
-# Configuration
 HASH_NAME = "sha256"
 ITERATIONS = 200_000
-SALT_SIZE = 16  # bytes
+SALT_SIZE = 16 
 
 
 def hash_password(password: str) -> str:
@@ -23,7 +22,6 @@ def hash_password(password: str) -> str:
         ITERATIONS
     )
 
-    # store: iterations$salt$hash (base64 encoded)
     return f"{ITERATIONS}$" \
            f"{base64.b64encode(salt).decode()}$" \
            f"{base64.b64encode(pwd_hash).decode()}"
@@ -45,5 +43,4 @@ def verify_password(password: str, stored_hash: str) -> bool:
         int(iterations)
     )
 
-    # constant-time comparison (prevents timing attacks)
     return hmac.compare_digest(pwd_hash, stored_pwd_hash)
