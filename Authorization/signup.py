@@ -3,7 +3,7 @@ from auth_utils import hash_password
 
 router = APIRouter()
 
-fake_db = {}  # replace with Supabase / DB
+fake_db = {} 
 
 
 @router.post("/signup")
