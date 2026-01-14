@@ -1,3 +1,8 @@
+"""
+This module contains the logic for experiment agent.
+This agent helps in creating experiment steps from the created hypothesis.
+The experiment steps are stored in a structured JSON format. 
+"""
 from llm_base import llm_call
 from mcp.server.fastmcp import FastMCP
 
