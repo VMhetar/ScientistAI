@@ -1,3 +1,8 @@
+"""
+This module contains the logic for hypothesis agent.
+This agent helps in creating hypothesis from the created assumptions.
+After creating hypothesis, this is stored in a structured JSON format. 
+"""
 from typing import Dict, List
 from llm_base import llm_call
 from mcp.server.fastmcp import FastMCP
