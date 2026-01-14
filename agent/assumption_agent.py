@@ -1,3 +1,8 @@
+"""
+This module contains the logic for assumption agent.
+This agent helps in creating assumptions from the provided paper.
+After reading the paper, this is stored in a structured JSON format. 
+"""
 import os
 from llm_base import llm_call
 from mcp.server.fastmcp import FastMCP
