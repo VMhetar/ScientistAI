@@ -38,7 +38,11 @@ Rules:
 - Do NOT output anything outside the JSON object.
 """
 
-async def assumption_agent(paper_text: str, experiment_id: int = 1) -> Dict[str, Any]:
+async def assumption_agent(
+    paper_text: str,
+    experiment_id: int = 1
+) -> Dict[str, Any]:
+
     prompt = f"""
 {prompt_base}
 
@@ -49,10 +53,18 @@ PAPER TEXT:
 """
 
     try:
-        response = await llm_call(prompt)
+        llm_result = await llm_call(prompt)
 
-        # Ensure valid JSON
-        parsed = json.loads(response)
+        # Handle LLM transport-level errors
+        if "error" in llm_result:
+            return {
+                "experiment_id": experiment_id,
+                "error": llm_result["error"],
+                "details": llm_result
+            }
+
+        raw_content = llm_result["content"]
+        parsed = json.loads(raw_content)
 
         # Minimal schema validation
         if "assumptions" not in parsed:
@@ -65,7 +77,7 @@ PAPER TEXT:
             "experiment_id": experiment_id,
             "error": "INVALID_JSON",
             "details": str(e),
-            "raw_response": response
+            "raw_response": raw_content
         }
 
     except Exception as e:

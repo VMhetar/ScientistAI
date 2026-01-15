@@ -41,7 +41,7 @@ Rules:
 - Do NOT output anything outside the JSON object.
 """
 
-async def experiment_agent(hypotheses_json: str,experiment_id: int = 1):
+async def experiment_agent(hypotheses_json: str, experiment_id: int = 1):
     prompt = f"""
 {prompt_base}
 
@@ -50,9 +50,20 @@ EXTRACTED HYPOTHESES:
 {hypotheses_json}
 \"\"\"
 """
+
     try:
-        response = await llm_call(prompt)
-        parsed = json.loads(response)
+        llm_result = await llm_call(prompt)
+
+        # Handle LLM transport-level errors
+        if "error" in llm_result:
+            return {
+                "experiment_id": experiment_id,
+                "error": llm_result["error"],
+                "details": llm_result
+            }
+
+        raw_content = llm_result["content"]
+        parsed = json.loads(raw_content)
 
         if "experiment_steps" not in parsed:
             raise ValueError("Missing 'experiment_steps' field in LLM response")
@@ -64,8 +75,9 @@ EXTRACTED HYPOTHESES:
             "experiment_id": experiment_id,
             "error": "INVALID_JSON",
             "details": str(e),
-            "raw_response": response
+            "raw_response": raw_content
         }
+
     except Exception as e:
         return {
             "experiment_id": experiment_id,

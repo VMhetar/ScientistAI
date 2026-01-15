@@ -1,40 +1,67 @@
-"""
-This is the Base LLM module which is used to configure the LLM model required for the agents.
-This module includes the url, the base prompt and a function llm_call to call the LLM.
-"""
-
 import os
 import httpx
 import asyncio
-from mcp.server.fastmcp import FastMCP
+from typing import Dict, Any
 
-mcp = FastMCP('127.0.0.1')
+api_key = os.getenv("OPENROUTER_API_KEY")
 
-api_key = os.getenv('OPENROUTER_API_KEY')
-
-headers = {
-    'Auhorization': f'Bearer {api_key}',
-    'Content-type': 'application/json'
+HEADERS = {
+    "Authorization": f"Bearer {api_key}",
+    "Content-Type": "application/json"
 }
 
-url = 'https://openrouter.ai/api/v1/chat/completions'
-prompt_base = f"""
-You are a research assistant. Help the researcher with multiple tasks and each time you are called for a specific task, work over it
-"""
+URL = "https://openrouter.ai/api/v1/chat/completions"
 
-async def llm_call(prompt:str):
-    prompt =prompt_base
+PROMPT_BASE = (
+    "You are a research assistant. "
+    "Follow the task instructions strictly."
+)
+
+# Simple semaphore for load protection
+_semaphore = asyncio.Semaphore(5)  # max 5 concurrent calls
+
+
+async def llm_call(prompt: str) -> Dict[str, Any]:
     data = {
-        'model':'gpt-3.5-turbo',
-        'messages':[
-            {
-                'role':'user',
-                'content':prompt
-            }
+        "model": "gpt-3.5-turbo",
+        "messages": [
+            {"role": "system", "content": PROMPT_BASE},
+            {"role": "user", "content": prompt}
         ]
     }
 
-    async with httpx.AsyncClient() as client:
-        response = await client.post(url=url, headers=headers, json=data)
-        result = response.json()
-        return result
+    async with _semaphore:
+        async with httpx.AsyncClient(timeout=20) as client:
+            try:
+                response = await client.post(URL, json=data, headers=HEADERS)
+
+                if response.status_code == 429:
+                    return {
+                        "error": "RATE_LIMITED",
+                        "status": 429
+                    }
+
+                if response.status_code != 200:
+                    return {
+                        "error": "LLM_HTTP_ERROR",
+                        "status": response.status_code,
+                        "body": response.text
+                    }
+
+                result = response.json()
+
+                return {
+                    "content": result["choices"][0]["message"]["content"],
+                    "usage": result.get("usage", {})
+                }
+
+            except httpx.TimeoutException:
+                return {
+                    "error": "TIMEOUT"
+                }
+
+            except Exception as e:
+                return {
+                    "error": "LLM_CALL_FAILED",
+                    "details": str(e)
+                }
