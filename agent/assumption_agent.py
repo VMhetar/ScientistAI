@@ -38,10 +38,7 @@ Rules:
 - Do NOT output anything outside the JSON object.
 """
 
-async def assumption_agent(
-    paper_text: str,
-    experiment_id: int = 1
-) -> Dict[str, Any]:
+async def assumption_agent(paper_text: str,experiment_id: int = 1) -> Dict[str, Any]:
 
     prompt = f"""
 {prompt_base}
