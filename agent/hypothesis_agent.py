@@ -3,7 +3,8 @@ This module contains the logic for hypothesis agent.
 This agent helps in creating hypothesis from the created assumptions.
 After creating hypothesis, this is stored in a structured JSON format. 
 """
-from typing import Dict, List
+import json
+from typing import Dict, List,Any
 from llm_base import llm_call
 from mcp.server.fastmcp import FastMCP
 
@@ -39,10 +40,7 @@ Rules:
 - Do NOT output anything outside the JSON object.
 """
 
-async def hypothesis_agent(
-    assumptions_json: str,
-    experiment_id: int = 1
-):
+async def hypothesis_agent(assumptions_json: str,experiment_id: int = 1):
     prompt = f"""
 {prompt_base}
 
@@ -51,5 +49,24 @@ EXTRACTED ASSUMPTIONS:
 {assumptions_json}
 \"\"\"
 """
-    response = await llm_call(prompt)
-    return response
+    try: 
+        response = await llm_call(prompt)
+        parsed = json.loads(response)
+
+        if "hypotheses" not in parsed:
+            raise ValueError("Missing 'hypotheses' field in LLM response")
+        return parsed
+    
+    except json.JSONDecodeError as e:
+        return{
+            "experiment_id": experiment_id,
+            "error": "INVALID_JSON",
+            "details": str(e),
+            "raw_response": response
+        }
+    except Exception as e:
+        return {
+            "experiment_id": experiment_id,
+            "error": "HYPOTHESIS_AGENT_FAILURE",
+            "details": str(e)
+        }
