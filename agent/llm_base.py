@@ -1,3 +1,8 @@
+"""
+This is the Base LLM module which is used to configure the LLM model required for the agents.
+This module includes the url, the base prompt and a function llm_call to call the LLM.
+"""
+
 import os
 import httpx
 import asyncio
