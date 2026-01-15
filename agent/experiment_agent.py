@@ -3,6 +3,7 @@ This module contains the logic for experiment agent.
 This agent helps in creating experiment steps from the created hypothesis.
 The experiment steps are stored in a structured JSON format. 
 """
+import json
 from llm_base import llm_call
 from mcp.server.fastmcp import FastMCP
 
@@ -40,10 +41,7 @@ Rules:
 - Do NOT output anything outside the JSON object.
 """
 
-async def experiment_agent(
-    hypotheses_json: str,
-    experiment_id: int = 1
-):
+async def experiment_agent(hypotheses_json: str,experiment_id: int = 1):
     prompt = f"""
 {prompt_base}
 
@@ -52,5 +50,25 @@ EXTRACTED HYPOTHESES:
 {hypotheses_json}
 \"\"\"
 """
-    response = await llm_call(prompt)
-    return response
+    try:
+        response = await llm_call(prompt)
+        parsed = json.loads(response)
+
+        if "experiment_steps" not in parsed:
+            raise ValueError("Missing 'experiment_steps' field in LLM response")
+
+        return parsed
+
+    except json.JSONDecodeError as e:
+        return {
+            "experiment_id": experiment_id,
+            "error": "INVALID_JSON",
+            "details": str(e),
+            "raw_response": response
+        }
+    except Exception as e:
+        return {
+            "experiment_id": experiment_id,
+            "error": "EXPERIMENT_AGENT_FAILURE",
+            "details": str(e)
+        }
