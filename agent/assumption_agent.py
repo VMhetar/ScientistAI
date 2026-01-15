@@ -4,9 +4,10 @@ This agent helps in creating assumptions from the provided paper.
 After reading the paper, this is stored in a structured JSON format. 
 """
 import os
+import json
 from llm_base import llm_call
 from mcp.server.fastmcp import FastMCP
-from typing import List, Dict
+from typing import List, Dict,Any
 
 mcp = FastMCP("Assumption-Agent")
 
@@ -37,7 +38,7 @@ Rules:
 - Do NOT output anything outside the JSON object.
 """
 
-async def assumption_agent(paper_text: str, experiment_id: int = 1):
+async def assumption_agent(paper_text: str, experiment_id: int = 1) -> Dict[str, Any]:
     prompt = f"""
 {prompt_base}
 
@@ -46,5 +47,30 @@ PAPER TEXT:
 {paper_text}
 \"\"\"
 """
-    response = await llm_call(prompt)
-    return response
+
+    try:
+        response = await llm_call(prompt)
+
+        # Ensure valid JSON
+        parsed = json.loads(response)
+
+        # Minimal schema validation
+        if "assumptions" not in parsed:
+            raise ValueError("Missing 'assumptions' field in LLM response")
+
+        return parsed
+
+    except json.JSONDecodeError as e:
+        return {
+            "experiment_id": experiment_id,
+            "error": "INVALID_JSON",
+            "details": str(e),
+            "raw_response": response
+        }
+
+    except Exception as e:
+        return {
+            "experiment_id": experiment_id,
+            "error": "ASSUMPTION_AGENT_FAILURE",
+            "details": str(e)
+        }
