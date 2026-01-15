@@ -1,6 +1,9 @@
+import React from 'react'
 
-function App() {
-    return <div classname="min-h-screen bg-slate-950 text-white overflow-hidden"></div>;
+const App = () => {
+  return (
+    <div>App</div>
+  )
 }
 
 export default App
